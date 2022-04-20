@@ -2,6 +2,7 @@ package Service
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"product-trace-server/Model"
 	"product-trace-server/tools"
 	"strconv"
@@ -10,7 +11,16 @@ import (
 var weight = [17]int{7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2}
 var validValue = [11]byte{'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'}
 
-func CheckUserID(_ID string)bool{
+type TraceService struct {
+	log *logrus.Entry
+}
+func NewTraceService(log *logrus.Logger) *TraceService {
+	return &TraceService{
+		log: log.WithField("services", "Match"),
+	}
+}
+
+func (ts *TraceService)CheckUserID(_ID string)bool{
 	if len(_ID)!=18{
 		return false
 	}
@@ -27,7 +37,7 @@ func CheckUserID(_ID string)bool{
 	}
 	return false
 }
-func GetFullToponym(_ID string) string{
+func (ts *TraceService)GetFullToponym(_ID string) string{
 	var str string
 	var city1 Model.City
 	var city2 Model.City
@@ -45,7 +55,7 @@ func GetFullToponym(_ID string) string{
 	}
 	return str
 }
-func CreateUnit(_ID string,_name string,_description string){
+func (ts *TraceService)CreateUnit(_ID string,_name string,_description string){
 	unit:=Model.ProductUnit{
 		ID:          _ID,
 		Name:        _name,
@@ -53,12 +63,13 @@ func CreateUnit(_ID string,_name string,_description string){
 	}
 	tools.GetDB().Create(unit)
 }
-func GetUnit(_ID string)(Model.ProductUnit,bool){
+func (ts *TraceService)GetUnit(_ID string)(Model.ProductUnit,bool){
 	var unit Model.ProductUnit
 	var count int64
 	fmt.Println(_ID)
 	tools.GetDB().Where(&Model.ProductUnit{ID:_ID}).Find(&unit).Count(&count)
 	if count==0{
+		ts.log.Error("not find ID")
 		return unit,false
 	}
 	return unit,true

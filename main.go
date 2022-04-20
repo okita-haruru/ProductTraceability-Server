@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"os"
 	"product-trace-server/Controllor"
+	"product-trace-server/Service"
 )
 
 func main() {
@@ -15,20 +18,43 @@ func main() {
 	if err != nil {
 		fmt.Println("error when reading config")
 	}
-	_port := viper.GetString("PORT")
+	PORT := viper.GetString("PORT")
+	LogFileLocation :=viper.GetString("LOG_FILE_LOCATION")
 
-
+	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
 	engine.GET( "/ping" ,  func (ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"message" :  "pong" ,
 		})
 	})
-	engine.GET( "/checkID" ,  Controllor.HandleCheckUserID)
-	engine.GET( "/fullToponym" ,  Controllor.HandleGetFullToponym)
-	engine.GET( "/createUnit" ,  Controllor.HandleCreateUnit)
-	engine.GET( "/getUnit" ,  Controllor.HandleGetUnit)
 
-	engine.Run(_port)
+	log := logrus.New()
+	log.Out = os.Stdout
+	log.Level = 4 // Info
+
+	logfile, err := os.OpenFile(LogFileLocation, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal("failed to open file for log")
+	} else {
+		log.Out = logfile
+		log.Formatter = &logrus.JSONFormatter{}
+	}
+	ts := Service.NewTraceService(
+		log,
+	)
+
+	/*
+		Initialize Controllers
+	*/
+	traceController := Controllor.NewTraceController(log,ts)
+
+
+	engine.GET( "/checkID" ,  traceController.HandleCheckUserID)
+	engine.GET( "/fullToponym" ,  traceController.HandleGetFullToponym)
+	engine.GET( "/createUnit" ,  traceController.HandleCreateUnit)
+	engine.GET( "/getUnit" ,  traceController.HandleGetUnit)
+
+	engine.Run(PORT)
 
 }
