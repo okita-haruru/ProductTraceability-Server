@@ -6,6 +6,7 @@ import (
 	"product-trace-server/Model"
 	"product-trace-server/tools"
 	"strconv"
+	"time"
 )
 
 var weight = [17]int{7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2}
@@ -42,6 +43,7 @@ func (ts *TraceService)GetFullToponym(_ID string) string{
 	var city1 Model.City
 	var city2 Model.City
 	var city3 Model.City
+	ts.log.Println("GetFullToponym:"+_ID)
 	tools.GetDB().Find(&city1, "id=?", _ID)
 	if _ID[len(_ID)-2:len(_ID)] != "00" {
 		tools.GetDB().Find(&city2, "id=?", city1.Parentid)
@@ -55,15 +57,21 @@ func (ts *TraceService)GetFullToponym(_ID string) string{
 	}
 	return str
 }
-func (ts *TraceService)CreateUnit(_ID string,_name string,_description string){
+func (ts *TraceService)CreateUnit(_ID uint,_name string,_description string)error{
+	ts.log.Println("CreateUnit %s %s %s",_ID,_name,_description)
 	unit:=Model.ProductUnit{
 		ID:          _ID,
 		Name:        _name,
 		Description: _description,
 	}
-	tools.GetDB().Create(unit)
+	result:=tools.GetDB().Create(unit)
+	if result.Error!=nil{
+		ts.log.Error("CreateUnitError:")
+		return result.Error
+	}
+	return nil
 }
-func (ts *TraceService)GetUnit(_ID string)(Model.ProductUnit,bool){
+func (ts *TraceService)GetUnit(_ID uint)(Model.ProductUnit,bool){
 	var unit Model.ProductUnit
 	var count int64
 	fmt.Println(_ID)
@@ -73,4 +81,37 @@ func (ts *TraceService)GetUnit(_ID string)(Model.ProductUnit,bool){
 		return unit,false
 	}
 	return unit,true
+}
+func (ts *TraceService)TransRecord(_unit string,_state string,_time string)(string,string,string){
+	uunit,err:=strconv.Atoi(_unit)
+	if err!=nil{
+
+	}
+	unit,flag:=ts.GetUnit(uint(uunit))
+	if !flag{
+		return "","",""
+	}
+	state:=getState(_state)
+	timeI,err:=strconv.Atoi(_time)
+	fmt.Println(timeI)
+	if err!=nil {
+
+	}
+	timeLayout := "2006-01-02 15:04:05"
+
+	return unit.Name,state,time.Unix(int64(timeI), 0).Format(timeLayout)
+}
+
+func getState(_state string)string{
+	switch _state {
+	case "1":
+		return "生成"
+	case "2":
+		return "进入"
+	case "3":
+		return "离开"
+	case "4":
+		return "进口"
+	}
+	return "Error"
 }

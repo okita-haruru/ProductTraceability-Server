@@ -51,9 +51,10 @@ func main() {
 
 
 	engine.GET( "/checkID" ,  traceController.HandleCheckUserID)
-	engine.GET( "/fullToponym" ,  traceController.HandleGetFullToponym)
-	engine.GET( "/createUnit" ,  traceController.HandleCreateUnit)
-	engine.GET( "/getUnit" ,  traceController.HandleGetUnit)
+	engine.GET( "/toponym" ,  traceController.HandleGetFullToponym)
+	engine.POST( "/unit" ,  traceController.HandleCreateUnit)
+	engine.GET( "/unit" ,  traceController.HandleGetUnit)
+	engine.GET("/record" , traceController.HandleTransRecord)
 
 	engine.Run(PORT)
 

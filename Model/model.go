@@ -14,7 +14,7 @@ type City struct {
 	Status       uint
 }
 type ProductUnit struct {
-	ID           string `gorm:"primaryKey"`
+	ID           uint `gorm:"primaryKey"`
 	Name         string `gorm:"index"`
 	Description  string
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"product-trace-server/Service"
+	"strconv"
 )
 type TraceController struct {
 	log *logrus.Entry
@@ -20,6 +21,7 @@ func NewTraceController(log *logrus.Logger, ts  *Service.TraceService) *TraceCon
 
 func (tc *TraceController)HandleCheckUserID(r *gin.Context) {
 	_id := r.Query("ID")
+	tc.log.Println("CheckUserID:"+_id)
 	flag := tc.ts.CheckUserID(_id)
 	r.JSON(http.StatusOK, gin.H{
 		"message": "ok",
@@ -28,6 +30,7 @@ func (tc *TraceController)HandleCheckUserID(r *gin.Context) {
 }
 func (tc *TraceController)HandleGetFullToponym(r *gin.Context){
 	_id := r.Query("ID")
+	tc.log.Println("GetFullToponym:"+_id)
 	str := tc.ts.GetFullToponym(_id)
 	r.JSON(http.StatusOK, gin.H{
 		"message": "ok",
@@ -35,18 +38,35 @@ func (tc *TraceController)HandleGetFullToponym(r *gin.Context){
 	})
 }
 func (tc *TraceController)HandleCreateUnit(r *gin.Context){
+	var err error
 	_id := r.Query("ID")
 	_name := r.Query("name")
 	_description := r.Query("description")
-	tc.ts.CreateUnit(_id,_name,_description)
+	tc.log.Println("CreateUnit:",_id,_name,_description)
+	var _id_I int
+	_id_I,err= strconv.Atoi(_id)
+	err =tc.ts.CreateUnit(uint(_id_I),_name,_description)
+	if err!=nil{
+		tc.log.Error("ErrorCreateUnit",_id,_name,_description)
+		r.JSON(http.StatusBadRequest, gin.H{
+			"message": "ErrorCreateUnit",
+		})
+		return
+	}
 	r.JSON(http.StatusOK, gin.H{
 		"message": "ok",
 	})
 }
 func (tc *TraceController)HandleGetUnit(r *gin.Context){
 	_id := r.Query("ID")
-	unit,flag:=tc.ts.GetUnit(_id)
+	tc.log.Println("GetUnit:"+_id)
+	_id_I,err:= strconv.Atoi(_id)
+	if err!=nil{
+
+	}
+	unit,flag:=tc.ts.GetUnit(uint(_id_I))
 	if !flag{
+		tc.log.Error( "Unit not fund",_id)
 		r.JSON(http.StatusBadRequest, gin.H{
 			"message": "Unit not fund",
 		})
@@ -57,5 +77,19 @@ func (tc *TraceController)HandleGetUnit(r *gin.Context){
 		"id": unit.ID,
 		"name": unit.Name,
 		"description": unit.Description,
+	})
+}
+func (tc *TraceController)HandleTransRecord(r *gin.Context){
+
+	id := r.Query("ID")
+	state := r.Query("state")
+	time :=  r.Query("timestamp")
+	tc.log.Println("HandleTransRecord",id,state,time)
+	_id,_state,_time:=tc.ts.TransRecord(id,state,time)
+	r.JSON(http.StatusOK, gin.H{
+		"message": "ok",
+		"name": _id,
+		"state": _state,
+		"time": _time,
 	})
 }
