@@ -22,7 +22,9 @@ func main() {
 	LogFileLocation :=viper.GetString("LOG_FILE_LOCATION")
 
 	gin.SetMode(gin.ReleaseMode)
+
 	engine := gin.Default()
+	engine.Use(CORSMiddleware())
 	engine.GET( "/ping" ,  func (ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"message" :  "pong" ,
@@ -55,7 +57,23 @@ func main() {
 	engine.POST( "/unit" ,  traceController.HandleCreateUnit)
 	engine.GET( "/unit" ,  traceController.HandleGetUnit)
 	engine.GET("/record" , traceController.HandleTransRecord)
+	engine.GET("/time" , traceController.HandleTransTime)
 
 	engine.Run(PORT)
 
+}
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, X-Auth-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
 }

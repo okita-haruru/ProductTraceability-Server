@@ -18,3 +18,8 @@ type ProductUnit struct {
 	Name         string `gorm:"index"`
 	Description  string
 }
+type Record struct{
+	UintName     string
+	State        string
+	Time         string
+}

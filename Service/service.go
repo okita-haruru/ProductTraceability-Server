@@ -102,6 +102,18 @@ func (ts *TraceService)TransRecord(_unit string,_state string,_time string)(stri
 	return unit.Name,state,time.Unix(int64(timeI), 0).Format(timeLayout)
 }
 
+func (ts *TraceService)TransTime(_time string)(string){
+
+	timeI,err:=strconv.Atoi(_time)
+	fmt.Println(timeI)
+	if err!=nil {
+
+	}
+	timeLayout := "2006-01-02 15:04:05"
+
+	return time.Unix(int64(timeI), 0).Format(timeLayout)
+}
+
 func getState(_state string)string{
 	switch _state {
 	case "1":

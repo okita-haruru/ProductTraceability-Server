@@ -1,9 +1,11 @@
 package Controllor
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"product-trace-server/Model"
 	"product-trace-server/Service"
 	"strconv"
 )
@@ -25,7 +27,7 @@ func (tc *TraceController)HandleCheckUserID(r *gin.Context) {
 	flag := tc.ts.CheckUserID(_id)
 	r.JSON(http.StatusOK, gin.H{
 		"message": "ok",
-		"true": flag,
+		"result": flag,
 	})
 }
 func (tc *TraceController)HandleGetFullToponym(r *gin.Context){
@@ -37,15 +39,31 @@ func (tc *TraceController)HandleGetFullToponym(r *gin.Context){
 		"fullName": str,
 	})
 }
+
+func (tc *TraceController)HandleTransTime(r *gin.Context){
+	_timestamp := r.Query("timestamp")
+	tc.log.Println("TransTime:"+_timestamp)
+	str := tc.ts.TransTime(_timestamp)
+	r.JSON(http.StatusOK, gin.H{
+		"message": "ok",
+		"time": str,
+	})
+}
 func (tc *TraceController)HandleCreateUnit(r *gin.Context){
 	var err error
-	_id := r.Query("ID")
-	_name := r.Query("name")
-	_description := r.Query("description")
+	json := Model.ProductUnit{}
+	r.BindJSON(&json)
+	_id:=json.ID
+	_name := json.Name
+	_description := json.Description
+	//_id := r.Query("ID")
+	//_name := r.Query("name")
+	//_description := r.Query("description")
+	fmt.Println(_id,_name,_description)
 	tc.log.Println("CreateUnit:",_id,_name,_description)
-	var _id_I int
-	_id_I,err= strconv.Atoi(_id)
-	err =tc.ts.CreateUnit(uint(_id_I),_name,_description)
+	//var _id_I int
+	//_id_I,err= strconv.Atoi(_id)
+	err =tc.ts.CreateUnit(_id,_name,_description)
 	if err!=nil{
 		tc.log.Error("ErrorCreateUnit",_id,_name,_description)
 		r.JSON(http.StatusBadRequest, gin.H{
@@ -86,10 +104,20 @@ func (tc *TraceController)HandleTransRecord(r *gin.Context){
 	time :=  r.Query("timestamp")
 	tc.log.Println("HandleTransRecord",id,state,time)
 	_id,_state,_time:=tc.ts.TransRecord(id,state,time)
+	var err error
+	var _regionCode int
+	var _sCode string
+	_regionCode,err=strconv.Atoi(id)
+	_sCode=strconv.Itoa(_regionCode>>12)
+
+	if err!=nil{
+
+	}
 	r.JSON(http.StatusOK, gin.H{
 		"message": "ok",
 		"name": _id,
 		"state": _state,
 		"time": _time,
+		"region":tc.ts.GetFullToponym(_sCode),
 	})
 }
