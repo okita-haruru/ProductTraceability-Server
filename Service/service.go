@@ -117,7 +117,7 @@ func (ts *TraceService)TransTime(_time string)(string){
 func getState(_state string)string{
 	switch _state {
 	case "1":
-		return "生成"
+		return "生产"
 	case "2":
 		return "进入"
 	case "3":
